@@ -42,7 +42,11 @@
       "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" repo create MetaConnect --public --source=. --remote=origin --push)",
       "Bash(C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe:*)",
       "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -R KingScatMaster/MetaConnect run list --limit 5)",
-      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -R KingScatMaster/MetaConnect run view 26534346870 --log-failed)"
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -R KingScatMaster/MetaConnect run view 26534346870 --log-failed)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -R KingScatMaster/MetaConnect run list --limit 3)",
+      "Bash(ls -la \"C:/Users/KingScatMaster/Desktop/MetaConnect/\"*.apk)",
+      "Bash(where cloudflared:*)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\cloudflared\\\\cloudflared.exe\" tunnel --url http://localhost:3000)"
     ]
   }
 }

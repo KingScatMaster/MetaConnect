@@ -33,7 +33,16 @@
       "Bash(gh auth:*)",
       "Bash(git config:*)",
       "Bash(where git:*)",
-      "Bash(winget install:*)"
+      "Bash(winget install:*)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth status)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\GitHub CLI\\\\gh.exe\" auth status)",
+      "Read(//c/Program Files/GitHub CLI/**)",
+      "Read(//c/Program Files \\(x86\\)/**)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth login --with-token)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" repo create MetaConnect --public --source=. --remote=origin --push)",
+      "Bash(C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe:*)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -R KingScatMaster/MetaConnect run list --limit 5)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -R KingScatMaster/MetaConnect run view 26534346870 --log-failed)"
     ]
   }
 }

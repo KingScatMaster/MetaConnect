@@ -207,6 +207,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         speechRecognizer?.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
                 runOnUiThread {
+                    log("[MIC READY] Listening now...")
                     if (awaitingCommand) {
                         statusText.text = "LISTENING for command..."
                     } else {
@@ -214,13 +215,29 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     }
                 }
             }
-            override fun onBeginningOfSpeech() {}
+            override fun onBeginningOfSpeech() {
+                runOnUiThread { log("[HEARING] Speech detected...") }
+            }
             override fun onRmsChanged(rmsdB: Float) {}
             override fun onBufferReceived(buffer: ByteArray?) {}
-            override fun onEndOfSpeech() {}
+            override fun onEndOfSpeech() {
+                runOnUiThread { log("[END] Processing speech...") }
+            }
 
             override fun onError(error: Int) {
-                // Auto-restart on any error
+                val msg = when (error) {
+                    SpeechRecognizer.ERROR_NO_MATCH -> "no match"
+                    SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "timeout"
+                    SpeechRecognizer.ERROR_AUDIO -> "audio error"
+                    SpeechRecognizer.ERROR_NETWORK -> "network error"
+                    SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "network timeout"
+                    SpeechRecognizer.ERROR_CLIENT -> "client error"
+                    SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "no permission"
+                    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "busy"
+                    SpeechRecognizer.ERROR_SERVER -> "server error"
+                    else -> "error $error"
+                }
+                runOnUiThread { log("[ERROR] $msg - restarting...") }
                 if (alwaysOn && !isProcessing) {
                     val delay = if (error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY) 1000L else 300L
                     handler.postDelayed({ startListening() }, delay)
@@ -229,10 +246,15 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
             override fun onResults(results: Bundle?) {
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION) ?: return
+                runOnUiThread { log("[HEARD] ${matches.firstOrNull()}") }
                 processResults(matches)
             }
 
-            override fun onPartialResults(partial: Bundle?) {}
+            override fun onPartialResults(partial: Bundle?) {
+                val matches = partial?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                val text = matches?.firstOrNull() ?: return
+                runOnUiThread { log("[...] $text") }
+            }
             override fun onEvent(eventType: Int, params: Bundle?) {}
         })
 

@@ -275,39 +275,17 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     private fun processResults(matches: List<String>) {
-        for (match in matches) {
-            val lower = match.lowercase().trim()
+        val heard = matches.firstOrNull()?.trim() ?: return
 
-            // Check for wake word
-            for (wake in WAKE_WORDS) {
-                if (lower.contains(wake)) {
-                    val command = lower.substringAfter(wake).trim()
-                    if (command.length > 1) {
-                        log(">> $command")
-                        sendToServer(command)
-                        return
-                    } else {
-                        awaitingCommand = true
-                        log("Wake word heard! Listening for command...")
-                        handler.postDelayed({ startListening() }, 200)
-                        return
-                    }
-                }
-            }
-
-            // If awaiting command after wake word
-            if (awaitingCommand && lower.length > 1) {
-                awaitingCommand = false
-                log(">> $lower")
-                sendToServer(lower)
-                return
-            }
+        if (heard.length < 2) {
+            // Too short, keep listening
+            if (alwaysOn) handler.postDelayed({ startListening() }, 300)
+            return
         }
 
-        // No wake word — keep listening
-        if (alwaysOn) {
-            handler.postDelayed({ startListening() }, 300)
-        }
+        // Send everything to the server — no wake word needed
+        log(">> $heard")
+        sendToServer(heard)
     }
 
     // =====================================================

@@ -62,7 +62,7 @@
         android:singleLine="true"
         android:layout_marginBottom="16dp" />
 
-    <!-- Test Buttons -->
+    <!-- Test Button -->
     <Button
         android:id="@+id/testBtn"
         android:layout_width="match_parent"
@@ -70,15 +70,6 @@
         android:text="Test Connection"
         android:textColor="#000000"
         android:backgroundTint="#888888"
-        android:layout_marginBottom="8dp" />
-
-    <Button
-        android:id="@+id/micTestBtn"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:text="Test Microphone"
-        android:textColor="#000000"
-        android:backgroundTint="#FF9800"
         android:layout_marginBottom="8dp" />
 
     <!-- Start / Stop -->

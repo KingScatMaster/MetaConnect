@@ -46,7 +46,9 @@
       "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -R KingScatMaster/MetaConnect run list --limit 3)",
       "Bash(ls -la \"C:/Users/KingScatMaster/Desktop/MetaConnect/\"*.apk)",
       "Bash(where cloudflared:*)",
-      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\cloudflared\\\\cloudflared.exe\" tunnel --url http://localhost:3000)"
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\cloudflared\\\\cloudflared.exe\" tunnel --url http://localhost:3000)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -R KingScatMaster/MetaConnect run list --limit 1)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -R KingScatMaster/MetaConnect run download 26536358246 -n MetaConnect-APK -D \"C:/Users/KingScatMaster/Desktop/MetaConnect\")"
     ]
   }
 }

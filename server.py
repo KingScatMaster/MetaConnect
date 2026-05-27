@@ -1,10 +1,9 @@
 """
 MetaConnect — Ray-Ban Meta Glasses Server
-Serves the HUD web app with dual mode:
-  - Fast mode: direct Ollama calls (~1s response)
-  - Full mode: relay through Claude AI Assistant bridge (emotional engine, memory, etc.)
+Fast mode with custom F5-TTS voice cloning.
+Sends audio responses back to the phone app.
 """
-import os, sys, json, asyncio
+import os, sys, json, asyncio, tempfile, base64
 from pathlib import Path
 
 try:
@@ -33,8 +32,9 @@ PORT = 3000
 BRIDGE_URL = 'ws://localhost:8765'
 BRIDGE_SECRET = 'HHAJ6ybkMUrfeNwiO8BMBcU_pwBlTl6GUi4r93hPLs4'
 APP_DIR = Path(__file__).parent / 'glasses'
+VOICES_DIR = Path(r'C:\Users\KingScatMaster\Desktop\Claude AI Assistant\voices\ready')
 
-# Ollama direct — bypasses bridge for speed
+# Ollama
 OLLAMA_HOST = 'http://localhost:11434'
 OLLAMA_MODEL = 'qwen2.5:1.5b'
 OLLAMA_SYSTEM = (
@@ -44,29 +44,89 @@ OLLAMA_SYSTEM = (
     "Warm, real, playful, opinionated. Companion, not assistant."
 )
 
-# Mode: 'fast' (direct Ollama, ~1s) or 'bridge' (full pipeline, ~4s)
 MODE = 'fast'
-
-# Conversation memory (lightweight, in-memory)
 conversation_history = []
 MAX_HISTORY = 10
 
+# Default voice
+CURRENT_VOICE = 'Ashley'
+
 # =====================================================
-# FAST MODE — Direct Ollama (sub-second responses)
+# F5-TTS VOICE ENGINE (lazy loaded)
+# =====================================================
+_f5_model = None
+
+def get_f5():
+    global _f5_model
+    if _f5_model is None:
+        try:
+            from f5_tts.api import F5TTS
+            _f5_model = F5TTS(device='cuda')
+            print("  [TTS] F5-TTS loaded on CUDA")
+        except Exception as e:
+            print(f"  [TTS] F5-TTS failed to load: {e}")
+    return _f5_model
+
+def generate_voice(text, voice_name=None):
+    """Generate speech audio using F5-TTS voice clone"""
+    voice = voice_name or CURRENT_VOICE
+    voice_dir = VOICES_DIR / voice
+
+    if not voice_dir.exists():
+        print(f"  [TTS] Voice '{voice}' not found")
+        return None
+
+    config_file = voice_dir / 'config.json'
+    if not config_file.exists():
+        return None
+
+    config = json.loads(config_file.read_text())
+    ref_file = str(voice_dir / config.get('ref_file', 'reference.wav'))
+    ref_text = config.get('ref_text', '')
+
+    if not Path(ref_file).exists():
+        print(f"  [TTS] Reference file not found: {ref_file}")
+        return None
+
+    f5 = get_f5()
+    if not f5:
+        return None
+
+    try:
+        # Generate to temp file
+        tmp = tempfile.NamedTemporaryFile(suffix='.wav', delete=False)
+        tmp.close()
+
+        f5.infer(
+            ref_file=ref_file,
+            ref_text=ref_text,
+            gen_text=text,
+            file_wave=tmp.name
+        )
+
+        # Read the wav file
+        with open(tmp.name, 'rb') as f:
+            audio_data = f.read()
+
+        os.unlink(tmp.name)
+        return audio_data
+    except Exception as e:
+        print(f"  [TTS] Generation error: {e}")
+        return None
+
+# =====================================================
+# FAST MODE — Direct Ollama
 # =====================================================
 async def ollama_fast(command):
-    """Hit Ollama directly — no bridge overhead"""
     global conversation_history
 
-    # Add to history
     conversation_history.append({"role": "user", "content": command})
     if len(conversation_history) > MAX_HISTORY:
         conversation_history = conversation_history[-MAX_HISTORY:]
 
-    # Build context from recent history
     context = ""
     if len(conversation_history) > 1:
-        recent = conversation_history[-6:-1]  # Last few exchanges
+        recent = conversation_history[-6:-1]
         context = "\n".join([f"{m['role'].title()}: {m['content']}" for m in recent])
         context = f"[Recent conversation]\n{context}\n\n"
 
@@ -103,10 +163,9 @@ async def ollama_fast(command):
     return None
 
 # =====================================================
-# BRIDGE RELAY (full pipeline — emotion, memory, etc.)
+# BRIDGE RELAY
 # =====================================================
 async def send_to_bridge(command):
-    """Send a command to the Claude AI Assistant bridge server"""
     try:
         async with websockets.connect(BRIDGE_URL, ping_interval=60, ping_timeout=60) as ws:
             await ws.send(json.dumps({'auth': BRIDGE_SECRET, 'command': command}))
@@ -120,7 +179,7 @@ async def send_to_bridge(command):
         return {"response": f"Connection error: {str(e)[:80]}", "emotion": "neutral"}
 
 # =====================================================
-# SMART ROUTER — fast for chat, bridge for commands
+# SMART ROUTER
 # =====================================================
 BRIDGE_KEYWORDS = [
     'screenshot', 'capture', 'start bot', 'stop bot', 'launch',
@@ -130,37 +189,72 @@ BRIDGE_KEYWORDS = [
 ]
 
 async def smart_send(command):
-    """Route to fast Ollama for chat, bridge for PC commands"""
     cmd_lower = command.lower()
-
-    # Check if this is a PC command that needs the bridge
     needs_bridge = any(kw in cmd_lower for kw in BRIDGE_KEYWORDS)
 
     if needs_bridge or MODE == 'bridge':
         return await send_to_bridge(command)
 
-    # Try fast Ollama first
     result = await ollama_fast(command)
     if result:
         return result
 
-    # Fall back to bridge
     return await send_to_bridge(command)
 
 # =====================================================
 # API ROUTES
 # =====================================================
 async def handle_send(request):
+    """Handle message — returns text + optional audio"""
     data = await request.json()
     command = data.get('message', '').strip()
+    voice = data.get('voice', CURRENT_VOICE)
+
     if not command:
         return web.json_response({"response": "Empty message", "emotion": "neutral"})
+
+    # Get text response
     result = await smart_send(command)
+    reply = result.get('response', '')
+
+    # Generate voice audio
+    audio_b64 = None
+    if reply:
+        audio_data = await asyncio.to_thread(generate_voice, reply, voice)
+        if audio_data:
+            audio_b64 = base64.b64encode(audio_data).decode('utf-8')
+            result['audio'] = audio_b64
+
     return web.json_response(result)
+
+async def handle_voices(request):
+    """List available voices"""
+    voices = []
+    if VOICES_DIR.exists():
+        for vdir in sorted(VOICES_DIR.iterdir()):
+            if vdir.is_dir() and (vdir / 'config.json').exists():
+                config = json.loads((vdir / 'config.json').read_text())
+                voices.append({
+                    "name": config.get('name', vdir.name),
+                    "id": vdir.name
+                })
+    return web.json_response({"voices": voices, "current": CURRENT_VOICE})
+
+async def handle_set_voice(request):
+    """Set the current voice"""
+    global CURRENT_VOICE
+    data = await request.json()
+    voice = data.get('voice', '')
+    if voice and (VOICES_DIR / voice).exists():
+        CURRENT_VOICE = voice
+        return web.json_response({"voice": CURRENT_VOICE, "status": "ok"})
+    return web.json_response({"error": "Voice not found"}, status=404)
 
 async def handle_health(request):
     ollama_ok = False
     bridge_ok = False
+    f5_ok = _f5_model is not None
+
     try:
         async with httpx.AsyncClient(timeout=3.0) as client:
             r = await client.get(f"{OLLAMA_HOST}/api/tags")
@@ -179,6 +273,8 @@ async def handle_health(request):
         "ollama": "connected" if ollama_ok else "offline",
         "bridge": "connected" if bridge_ok else "offline",
         "model": OLLAMA_MODEL,
+        "voice": CURRENT_VOICE,
+        "tts": "loaded" if f5_ok else "not loaded (loads on first use)",
         "server": "MetaConnect v1.0"
     })
 
@@ -220,6 +316,8 @@ def create_app():
     app = web.Application()
     app.router.add_post('/api/send', handle_send)
     app.router.add_get('/api/health', handle_health)
+    app.router.add_get('/api/voices', handle_voices)
+    app.router.add_post('/api/voice', handle_set_voice)
     app.router.add_get('/ws', handle_ws)
     app.router.add_get('/', handle_index)
     app.router.add_static('/static', APP_DIR / 'static', show_index=False)
@@ -229,16 +327,19 @@ def create_app():
 # MAIN
 # =====================================================
 if __name__ == '__main__':
+    # List available voices
+    voices = []
+    if VOICES_DIR.exists():
+        voices = [d.name for d in VOICES_DIR.iterdir() if d.is_dir() and (d / 'config.json').exists()]
+
     print("=" * 50)
-    print("  MetaConnect — Ray-Ban Meta Glasses Server")
+    print("  MetaConnect -- Ray-Ban Meta Glasses Server")
     print("=" * 50)
-    print(f"  Mode:    {MODE.upper()} ({'direct Ollama ~1s' if MODE == 'fast' else 'full bridge ~4s'})")
+    print(f"  Mode:    {MODE.upper()}")
     print(f"  Model:   {OLLAMA_MODEL}")
+    print(f"  Voice:   {CURRENT_VOICE}")
+    print(f"  Voices:  {', '.join(voices)}")
     print(f"  Server:  http://0.0.0.0:{PORT}")
-    print(f"  Bridge:  {BRIDGE_URL}")
-    print()
-    print("  Chat -> Fast Ollama (~1s)")
-    print("  PC commands -> Bridge (screenshot, bot, etc.)")
     print("=" * 50)
 
     app = create_app()

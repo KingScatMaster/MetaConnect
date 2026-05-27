@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Claude — MetaConnect</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <meta name="theme-color" content="#000000">
+    <!-- PWA — installable app, survives background better -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="manifest" href="/static/manifest.json">
+</head>
+<body>
+    <!-- Status bar -->
+    <div id="status-bar">
+        <span id="status-dot"></span>
+        <span id="status-text">Connecting...</span>
+        <span id="lock-status"></span>
+    </div>
+
+    <!-- Main HUD display area -->
+    <div id="hud">
+        <!-- Response cards stack here -->
+        <div id="cards"></div>
+
+        <!-- Listening indicator -->
+        <div id="listening" class="hidden">
+            <div class="pulse-ring"></div>
+            <span>Listening...</span>
+        </div>
+
+        <!-- Thinking indicator -->
+        <div id="thinking" class="hidden">
+            <div class="dots">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input area (touch/tap fallback) -->
+    <div id="input-area">
+        <button id="mic-btn" aria-label="Toggle voice">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+        </button>
+        <input id="text-input" type="text" placeholder="Say 'Hey Claude' or type..." autocomplete="off">
+        <button id="send-btn" aria-label="Send">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Silent audio — keeps browser alive in background -->
+    <audio id="keepalive-audio" loop playsinline></audio>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

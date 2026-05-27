@@ -1,0 +1,117 @@
+Ray-Ban Meta glasses + Third-Party AI (Claude) Developer Toolkit Breakdown
+
+
+
+1. Two ways to build for the glasses
+
+
+
+Meta released the Meta Wearables Device Access Toolkit with 2 build paths:
+
+
+
+Path: Native Mobile App Extension
+
+What you build: Swift for iOS / Kotlin for Android SDK that extends your existing phone app onto the glasses display
+
+Best for: Adding a "glanceable" companion UI to an app you already have
+
+
+
+Path: Web Apps
+
+What you build: Standalone apps using HTML, CSS, and JavaScript — no proprietary framework
+
+Best for: Quick prototypes, AI assistants like Claude, or apps that don’t need the App Store
+
+
+
+Both paths can show text, images, buttons, and video on the in-lens display, plus access motion data, phone GPS, Neural Band gesture input, and local storage.
+
+
+
+2. How to actually run Claude on them
+
+
+
+Here’s the current developer workflow:
+
+
+
+1. Join the developer preview
+
+Sign up at wearables.developer.meta.com to get the SDK and docs. It’s still in preview, so distribution is limited to 100 test users for native builds or password-protected URLs for web apps.
+
+
+
+2. Pick Web Apps if you want Claude fastest
+
+Meta’s Web Apps starter kit on GitHub is explicitly compatible with Claude Code, Cursor, and GitHub Copilot. That means you can vibe-code a Claude frontend directly.
+
+
+
+3. Basic architecture
+
+- Host a web app that calls Claude’s API. Since the glasses themselves don’t run LLMs locally, your web app handles the prompt → Claude API → response loop.
+
+- Render Claude’s text output as UI cards in the monocular in-lens display. Keep it glanceable — battery is ~6 hrs mixed use.
+
+- Use the Neural Band for gesture input: scroll, select, or trigger “Hey Claude”.
+
+- Deploy via URL. The glasses load your web app directly, no app store needed.
+
+
+
+4. For deeper integration
+
+Use the native Device Access Toolkit to tap the glasses camera/mic. You could stream a 720p/30fps feed to Claude’s multimodal API for “see what I see” queries. Meta AI app acts as the bridge between glasses and your app.
+
+
+
+3. What you can build today
+
+
+
+Meta’s examples: live-score overlays, transit nav, teleprompter cards, cooking guides, grocery lists. For AI specifically, devs are already testing:
+
+- Disney: Park assistant using camera + AI to explain rides
+
+- 18Birdies: Golf caddy with club recommendations
+
+- Twitch: Livestreaming from glasses
+
+
+
+So a “Claude for Ray-Bans” would be similar: voice in, text overlay out. Not full AR, more like ambient micro-apps.
+
+
+
+4. Current limitations to know
+
+
+
+- No public app store yet — you’re distributing to testers via URL or beta channels.
+
+- HUD is monocular + private. Design for short, glanceable info, not novels.
+
+- Camera access ≠ display access on Ray-Ban Display yet. You can get images *from* the glasses, but writing to the HUD is still rolling out.
+
+- Preview means rules could change — Meta hasn’t specified app review or content restrictions.
+
+
+
+Quick start if you’re a dev
+
+
+
+1. Clone the Web Apps starter kit from Meta’s GitHub.
+
+2. Add your Claude API key + a simple prompt UI.
+
+3. Deploy to a URL, open it on the glasses via the Meta AI app.
+
+4. Use Neural Band gestures to scroll Claude’s responses.
+
+
+
+The toolkit is designed for AI devs — Claude Code support is built in, so you can prompt your way through it.

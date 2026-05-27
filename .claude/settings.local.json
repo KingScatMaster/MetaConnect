@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import aiohttp, websockets; print\\('aiohttp:', aiohttp.__version__\\); print\\('websockets:', websockets.__version__\\)\")",
+      "Bash(python server.py)",
+      "Bash(ipconfig)",
+      "Bash(curl -s http://localhost:5500/api/health)",
+      "Bash(where ngrok:*)",
+      "Bash(ngrok http:*)",
+      "Bash(curl -s http://localhost:4040/api/tunnels)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d['tunnels'][0]['public_url']\\)\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); tunnels=d['tunnels']; [print\\(t['public_url'], '→', t['config']['addr']\\) for t in tunnels]\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); tunnels=d['tunnels']; [print\\(t['public_url'], t['config']['addr']\\) for t in tunnels]\")",
+      "Bash(curl -s http://localhost:3000 -o /dev/null -w \"%{http_code}\")",
+      "Bash(netstat -ano)",
+      "Bash(tasklist)",
+      "Bash(taskkill:*)",
+      "Bash(curl -s http://localhost:3000/api/health)",
+      "Bash(curl:*)",
+      "Bash(python:*)",
+      "Bash(ollama list:*)",
+      "Bash(where ollama:*)",
+      "Bash(ollama serve:*)",
+      "Bash(nvidia-smi --query-gpu=name,memory.total,memory.used --format=csv,noheader)",
+      "Bash(ollama pull:*)",
+      "Bash(where java:*)",
+      "Bash(java -version)",
+      "Bash(where gradle:*)",
+      "Read(//c/Users/KingScatMaster/AppData/Local/**)",
+      "Bash(npm list:*)",
+      "Bash(where npx:*)",
+      "Bash(where keytool:*)",
+      "Bash(gh auth:*)",
+      "Bash(git config:*)",
+      "Bash(where git:*)",
+      "Bash(winget install:*)"
+    ]
+  }
+}

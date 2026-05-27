@@ -81,6 +81,7 @@ async def ollama_fast(command):
                     "prompt": prompt,
                     "system": OLLAMA_SYSTEM,
                     "stream": False,
+                    "keep_alive": "24h",
                     "options": {
                         "temperature": 0.5,
                         "num_predict": 60,

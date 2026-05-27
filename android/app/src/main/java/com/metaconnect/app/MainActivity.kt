@@ -275,17 +275,23 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     private fun processResults(matches: List<String>) {
-        val heard = matches.firstOrNull()?.trim() ?: return
+        try {
+            val heard = matches.firstOrNull()?.trim() ?: ""
+            log("[PROCESS] Got: '$heard' (${heard.length} chars)")
 
-        if (heard.length < 2) {
-            // Too short, keep listening
-            if (alwaysOn) handler.postDelayed({ startListening() }, 300)
-            return
+            if (heard.length < 2) {
+                log("[SKIP] Too short, restarting...")
+                if (alwaysOn) handler.postDelayed({ startListening() }, 300)
+                return
+            }
+
+            log(">> SENDING: $heard")
+            log("[URL] $serverUrl/api/send")
+            sendToServer(heard)
+        } catch (e: Exception) {
+            log("[CRASH] processResults: ${e.message}")
+            if (alwaysOn) handler.postDelayed({ startListening() }, 1000)
         }
-
-        // Send everything to the server — no wake word needed
-        log(">> $heard")
-        sendToServer(heard)
     }
 
     // =====================================================
@@ -298,35 +304,49 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             statusText.setTextColor(ContextCompat.getColor(this, android.R.color.holo_blue_light))
         }
 
+        log("[NET] Sending to server...")
+
         val json = JSONObject().apply { put("message", command) }
         val body = json.toString().toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
             .url("$serverUrl/api/send")
             .addHeader("ngrok-skip-browser-warning", "true")
+            .addHeader("Content-Type", "application/json")
             .post(body)
             .build()
 
-        httpClient?.newCall(request)?.enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                isProcessing = false
-                log("Server error: ${e.message?.take(40)}")
-                speak("Sorry, couldn't reach the server.")
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                isProcessing = false
-                val body = response.body?.string() ?: "{}"
-                try {
-                    val data = JSONObject(body)
-                    val reply = data.optString("response", "No response.")
-                    log("<< $reply")
-                    speak(reply)
-                } catch (e: Exception) {
-                    log("Parse error")
-                    speak("Got a weird response.")
+        try {
+            httpClient?.newCall(request)?.enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    isProcessing = false
+                    log("[FAIL] ${e.message}")
+                    runOnUiThread {
+                        statusText.text = "Server error"
+                        statusText.setTextColor(ContextCompat.getColor(this@MainActivity, android.R.color.holo_red_light))
+                    }
+                    speak("Couldn't reach the server.")
                 }
-            }
-        })
+
+                override fun onResponse(call: Call, response: Response) {
+                    isProcessing = false
+                    val responseBody = response.body?.string() ?: "{}"
+                    log("[RESPONSE] HTTP ${response.code}: ${responseBody.take(100)}")
+                    try {
+                        val data = JSONObject(responseBody)
+                        val reply = data.optString("response", "No response.")
+                        log("<< $reply")
+                        speak(reply)
+                    } catch (e: Exception) {
+                        log("[PARSE ERROR] ${e.message}")
+                        log("[RAW] ${responseBody.take(200)}")
+                        speak("Got a weird response.")
+                    }
+                }
+            })
+        } catch (e: Exception) {
+            isProcessing = false
+            log("[CRASH] sendToServer: ${e.message}")
+        }
     }
 
     private fun speak(text: String) {

@@ -50,7 +50,8 @@
       "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -R KingScatMaster/MetaConnect run list --limit 1)",
       "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -R KingScatMaster/MetaConnect run download 26536358246 -n MetaConnect-APK -D \"C:/Users/KingScatMaster/Desktop/MetaConnect\")",
       "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -R KingScatMaster/MetaConnect run download 26541264396 -n MetaConnect-APK -D \"C:/Users/KingScatMaster/Desktop/MetaConnect\")",
-      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -R KingScatMaster/MetaConnect run download 26542737653 -n MetaConnect-APK -D \"C:/Users/KingScatMaster/Desktop/MetaConnect\")"
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -R KingScatMaster/MetaConnect run download 26542737653 -n MetaConnect-APK -D \"C:/Users/KingScatMaster/Desktop/MetaConnect\")",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -R KingScatMaster/MetaConnect run download 26543584408 -n MetaConnect-APK -D \"C:/Users/KingScatMaster/Desktop/MetaConnect\")"
     ]
   }
 }
